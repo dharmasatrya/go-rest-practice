@@ -1,23 +1,30 @@
 package main
 
 import (
-	"go-rest-practice/cmd/api"
-	"go-rest-practice/config"
 	"go-rest-practice/db"
-	"log"
+	"go-rest-practice/handler"
+
+	echojwt "github.com/labstack/echo-jwt"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
-	connStr := config.InitConfig()
-	db, err := db.NewPostgresStorage(connStr)
 
-	if err != nil {
-		log.Fatal(err)
-	}
+	db.InitDB()
+	defer db.CloseDB()
 
-	server := api.NewAPIServer(":8080", db)
-	err2 := server.Run()
-	if err2 != nil {
-		log.Fatal(err2)
-	}
+	e := echo.New()
+
+	u := e.Group("/users")
+	u.Use(echojwt.JWT([]byte("secret")))
+	u.GET("/:id", handler.GetUserDetail)
+
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
+	e.POST("/register", handler.Register)
+	e.POST("/login", handler.Login)
+
+	e.Logger.Fatal(e.Start(":8080"))
 }
