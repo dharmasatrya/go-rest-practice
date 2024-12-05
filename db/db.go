@@ -27,12 +27,12 @@ func InitDB() {
 
 	config.ConnConfig.StatementCacheCapacity = 100
 
+	config.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
+
 	Pool, err = pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
 		log.Fatalf("Failed to create db pool %v", err)
 	}
-
-	Pool.Config().ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 
 	err = Pool.Ping(context.Background())
 	if err != nil {
